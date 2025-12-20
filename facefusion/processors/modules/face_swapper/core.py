@@ -551,10 +551,9 @@ def pre_process(mode : ProcessMode) -> bool:
 		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
 
-	if state_manager.get_item('workflow') in [ 'audio-to-image:video', 'image-to-image', 'image-to-video' ]:
-		if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-			logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
-			return False
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
+		return False
 
 	return True
 
@@ -576,10 +575,12 @@ def post_process() -> None:
 
 
 def swap_face(source_face : Face, target_face : Face, temp_vision_frame : VisionFrame) -> VisionFrame:
+	logger.debug('swap_face - starting face swap', __name__)
 	model_template = get_model_options().get('template')
 	model_size = get_model_options().get('size')
 	pixel_boost_size = unpack_resolution(state_manager.get_item('face_swapper_pixel_boost'))
 	pixel_boost_total = pixel_boost_size[0] // model_size[0]
+	logger.debug(f'swap_face - model_template: {model_template}, model_size: {model_size}, pixel_boost: {pixel_boost_size}', __name__)
 	crop_vision_frame, affine_matrix = warp_face_by_face_landmark_5(temp_vision_frame, target_face.landmark_set.get('5/68'), model_template, pixel_boost_size)
 	temp_vision_frames = []
 	crop_masks = []
@@ -760,12 +761,19 @@ def process_frame(inputs : FaceSwapperInputs) -> ProcessorOutputs:
 	target_vision_frame = inputs.get('target_vision_frame')
 	temp_vision_frame = inputs.get('temp_vision_frame')
 	temp_vision_mask = inputs.get('temp_vision_mask')
+	logger.debug(f'process_frame - source_vision_frames count: {len(source_vision_frames) if source_vision_frames else 0}', __name__)
 	source_face = extract_source_face(source_vision_frames)
+	logger.debug(f'process_frame - source_face extracted: {source_face is not None}', __name__)
 	target_faces = select_faces(reference_vision_frame, target_vision_frame)
+	logger.debug(f'process_frame - target_faces count: {len(target_faces) if target_faces else 0}', __name__)
 
 	if source_face and target_faces:
+		logger.debug(f'process_frame - swapping {len(target_faces)} faces', __name__)
 		for target_face in target_faces:
 			target_face = scale_face(target_face, target_vision_frame, temp_vision_frame)
 			temp_vision_frame = swap_face(source_face, target_face, temp_vision_frame)
+		logger.debug('process_frame - swap completed', __name__)
+	else:
+		logger.debug(f'process_frame - skipping swap (source_face={source_face is not None}, target_faces={target_faces is not None})', __name__)
 
 	return temp_vision_frame, temp_vision_mask

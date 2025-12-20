@@ -101,7 +101,7 @@ def register_args(program : ArgumentParser) -> None:
 	if group_processors:
 		group_processors.add_argument('--expression-restorer-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'expression_restorer_model', 'live_portrait'), choices = expression_restorer_choices.expression_restorer_models)
 		group_processors.add_argument('--expression-restorer-factor', help = translator.get('help.factor', __package__), type = int, default = config.get_int_value('processors', 'expression_restorer_factor', '80'), choices = expression_restorer_choices.expression_restorer_factor_range, metavar = create_int_metavar(expression_restorer_choices.expression_restorer_factor_range))
-		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', __package__).format(choices = ', '.join(expression_restorer_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(expression_restorer_choices.expression_restorer_areas)), choices = expression_restorer_choices.expression_restorer_areas, nargs = '+', metavar = 'EXPRESSION_RESTORER_AREAS')
+		group_processors.add_argument('--expression-restorer-areas', help = translator.get('help.areas', __package__).format(choices = ', '.join(expression_restorer_choices.expression_restorer_areas)), default = config.get_str_list('processors', 'expression_restorer_areas', ' '.join(expression_restorer_choices.expression_restorer_areas)), choices = expression_restorer_choices.expression_restorer_areas, nargs ='+', metavar ='EXPRESSION_RESTORER_AREAS')
 		facefusion.args_store.register_args([ 'expression_restorer_model', 'expression_restorer_factor', 'expression_restorer_areas' ], scopes = [ 'api', 'cli' ])
 
 
@@ -125,10 +125,9 @@ def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
-	if state_manager.get_item('workflow') in [ 'audio-to-image:video', 'image-to-image', 'image-to-video' ]:
-		if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-			logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
-			return False
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
+		return False
 	return True
 
 

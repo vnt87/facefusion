@@ -12,15 +12,15 @@ from facefusion.apis.core import create_api
 from facefusion.args_helper import apply_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
-from facefusion.filesystem import get_file_extension, has_audio, has_image, has_video
-from facefusion.filesystem import get_file_name, resolve_file_paths, resolve_file_pattern
+from facefusion.filesystem import get_file_extension, get_file_name, resolve_file_paths, resolve_file_pattern
+from facefusion.filesystem import has_audio, has_image, has_video
 from facefusion.jobs import job_helper, job_manager, job_runner
 from facefusion.jobs.job_list import compose_job_list
 from facefusion.processors.core import get_processors_modules
 from facefusion.program import create_program
 from facefusion.program_helper import validate_args
 from facefusion.types import Args, ErrorCode, WorkFlow
-from facefusion.workflows import audio_to_image, audio_to_image_as_frames, image_to_image, image_to_video, image_to_video_as_frames
+from facefusion.workflows import audio_to_image, image_to_image, image_to_video
 
 
 def cli() -> None:
@@ -336,29 +336,21 @@ def conditional_process() -> ErrorCode:
 		if not processor_module.pre_process('output'):
 			return 2
 
-	if state_manager.get_item('workflow') == 'audio-to-image:video':
+	if state_manager.get_item('workflow') == 'audio-to-image':
 		return audio_to_image.process(start_time)
-	if state_manager.get_item('workflow') == 'audio-to-image:frames':
-		return audio_to_image_as_frames.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-image':
 		return image_to_image.process(start_time)
 	if state_manager.get_item('workflow') == 'image-to-video':
 		return image_to_video.process(start_time)
-	if state_manager.get_item('workflow') == 'image-to-video:frames':
-		return image_to_video_as_frames.process(start_time)
 
 	return 0
 
 
 def detect_workflow() -> WorkFlow:
 	if has_video([ state_manager.get_item('target_path') ]):
-		if get_file_extension(state_manager.get_item('output_path')):
-			return 'image-to-video'
-		return 'image-to-video:frames'
+		return 'image-to-video'
 
 	if has_audio(state_manager.get_item('source_paths')) and has_image([ state_manager.get_item('target_path') ]):
-		if get_file_extension(state_manager.get_item('output_path')):
-			return 'audio-to-image:video'
-		return 'audio-to-image:frames'
+		return 'audio-to-image'
 
 	return 'image-to-image'

@@ -421,7 +421,7 @@ def register_args(program : ArgumentParser) -> None:
 	group_processors = find_argument_group(program, 'processors')
 	if group_processors:
 		group_processors.add_argument('--background-remover-model', help = translator.get('help.model', __package__), default = config.get_str_value('processors', 'background_remover_model', 'rmbg_2.0'), choices = background_remover_choices.background_remover_models)
-		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'), nargs = '+')
+		group_processors.add_argument('--background-remover-color', help = translator.get('help.color', __package__), type = partial(sanitize_int_range, int_range = background_remover_choices.background_remover_color_range), default = config.get_int_list('processors', 'background_remover_color', '0 0 0 0'), nargs ='+')
 		facefusion.args_store.register_args([ 'background_remover_model', 'background_remover_color' ], scopes = [ 'api', 'cli' ])
 
 
@@ -441,10 +441,9 @@ def pre_process(mode : ProcessMode) -> bool:
 	if mode in [ 'output', 'preview' ] and not is_image(state_manager.get_item('target_path')) and not is_video(state_manager.get_item('target_path')):
 		logger.error(translator.get('choose_image_or_video_target') + translator.get('exclamation_mark'), __name__)
 		return False
-	if state_manager.get_item('workflow') in [ 'audio-to-image:video', 'image-to-image', 'image-to-video' ]:
-		if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
-			logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
-			return False
+	if mode == 'output' and not in_directory(state_manager.get_item('output_path')):
+		logger.error(translator.get('specify_image_or_video_output') + translator.get('exclamation_mark'), __name__)
+		return False
 	return True
 
 

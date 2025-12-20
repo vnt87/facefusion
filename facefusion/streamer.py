@@ -52,11 +52,10 @@ def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 	temp_vision_mask = extract_vision_mask(temp_vision_frame)
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):
-		logger.disable()
 		if processor_module.pre_process('stream'):
-			logger.enable()
 			temp_vision_frame, temp_vision_mask = processor_module.process_frame(
 			{
+				'reference_vision_frame': target_vision_frame,
 				'source_vision_frames': source_vision_frames,
 				'source_audio_frame': source_audio_frame,
 				'source_voice_frame': source_voice_frame,
@@ -64,7 +63,6 @@ def process_stream_frame(target_vision_frame : VisionFrame) -> VisionFrame:
 				'temp_vision_frame': temp_vision_frame,
 				'temp_vision_mask': temp_vision_mask
 			})
-		logger.enable()
 
 	return temp_vision_frame
 

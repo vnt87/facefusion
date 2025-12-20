@@ -106,6 +106,8 @@ def create_session_guard(app : ASGIApp) -> ASGIApp:
 
 			if session_id:
 				if session_manager.validate_session(session_id):
+					from facefusion.session_context import set_session_id
+					set_session_id(session_id)
 					return await app(scope, receive, send)
 
 				response = JSONResponse(

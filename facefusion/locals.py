@@ -1,6 +1,6 @@
-from facefusion.types import Locales
+from facefusion.types import Locals
 
-LOCALES : Locales =\
+LOCALS : Locals =\
 {
 	'en':
 	{
@@ -40,8 +40,6 @@ LOCALES : Locales =\
 		'processing_stopped': 'processing stopped',
 		'processing_image_succeeded': 'processing to image succeeded in {seconds} seconds',
 		'processing_image_failed': 'processing to image failed',
-		'processing_frames_succeeded': 'processing to frames succeeded in {seconds} seconds',
-		'processing_frames_failed': 'processing to frames failed',
 		'processing_video_succeeded': 'processing to video succeeded in {seconds} seconds',
 		'processing_video_failed': 'processing to video failed',
 		'choose_image_source': 'choose an image for the source',

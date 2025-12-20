@@ -1,7 +1,5 @@
-import os
-
 from facefusion.ffmpeg import concat_video
-from facefusion.filesystem import are_images, are_videos, copy_file, create_directory, is_directory, is_file, move_directory, move_file, remove_directory, remove_file, resolve_file_paths
+from facefusion.filesystem import are_images, are_videos, move_file, remove_file
 from facefusion.jobs import job_helper, job_manager
 from facefusion.types import JobOutputSet, JobStep, ProcessStep
 
@@ -61,8 +59,6 @@ def run_step(job_id : str, step_index : int, step : JobStep, process_step : Proc
 		output_path = step_args.get('output_path')
 		step_output_path = job_helper.get_step_output_path(job_id, step_index, output_path)
 
-		if is_directory(output_path):
-			return move_directory(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
 		return move_file(output_path, step_output_path) and job_manager.set_step_status(job_id, step_index, 'completed')
 	job_manager.set_step_status(job_id, step_index, 'failed')
 	return False
@@ -83,26 +79,13 @@ def finalize_steps(job_id : str) -> bool:
 	output_set = collect_output_set(job_id)
 
 	for output_path, temp_output_paths in output_set.items():
-		has_videos = are_videos(temp_output_paths)
-		has_images = are_images(temp_output_paths)
-
-		if has_videos:
+		if are_videos(temp_output_paths):
 			if not concat_video(output_path, temp_output_paths):
 				return False
-		if not has_videos and has_images:
+		if are_images(temp_output_paths):
 			for temp_output_path in temp_output_paths:
 				if not move_file(temp_output_path, output_path):
 					return False
-		if not has_videos and not has_images:
-			if not create_directory(output_path):
-				return False
-
-			for temp_output_path in temp_output_paths:
-				if is_directory(temp_output_path):
-					temp_frame_paths = resolve_file_paths(temp_output_path)
-					for temp_frame_path in temp_frame_paths:
-						if not copy_file(temp_frame_path, os.path.join(output_path, os.path.basename(temp_frame_path))):
-							return False
 	return True
 
 
@@ -111,12 +94,8 @@ def clean_steps(job_id: str) -> bool:
 
 	for temp_output_paths in output_set.values():
 		for temp_output_path in temp_output_paths:
-			if is_file(temp_output_path):
-				if not remove_file(temp_output_path):
-					return False
-			if is_directory(temp_output_path):
-				if not remove_directory(temp_output_path):
-					return False
+			if not remove_file(temp_output_path):
+				return False
 	return True
 
 

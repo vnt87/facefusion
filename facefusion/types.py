@@ -52,10 +52,10 @@ FaceStore = TypedDict('FaceStore',
 })
 
 Language = Literal['en']
-Locales : TypeAlias = Dict[Language, Dict[str, Any]]
-LocalePoolSet : TypeAlias = Dict[str, Locales]
+Locals : TypeAlias = Dict[Language, Dict[str, Any]]
+LocalPoolSet : TypeAlias = Dict[str, Locals]
 
-WorkFlow = Literal['auto', 'audio-to-image:frames', 'audio-to-image:video', 'image-to-image', 'image-to-video', 'image-to-video:frames']
+WorkFlow = Literal['auto', 'audio-to-image', 'image-to-image', 'image-to-video']
 
 VideoCaptureSet : TypeAlias = Dict[str, cv2.VideoCapture]
 VideoWriterSet : TypeAlias = Dict[str, cv2.VideoWriter]
@@ -152,10 +152,12 @@ FaceMaskAreaSet : TypeAlias = Dict[FaceMaskArea, List[int]]
 
 VoiceExtractorModel = Literal['kim_vocal_1', 'kim_vocal_2', 'uvr_mdxnet']
 
+MediaType = Literal['audio', 'image', 'video']
 AudioFormat = Literal['flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav']
 ImageFormat = Literal['bmp', 'jpeg', 'png', 'tiff', 'webp']
 VideoFormat = Literal['avi', 'm4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mxf', 'webm', 'wmv']
 TempFrameFormat = Literal['bmp', 'jpeg', 'png', 'tiff']
+StreamMediaType = Literal['video', 'image']
 AudioTypeSet : TypeAlias = Dict[AudioFormat, str]
 ImageTypeSet : TypeAlias = Dict[ImageFormat, str]
 VideoTypeSet : TypeAlias = Dict[VideoFormat, str]
@@ -231,6 +233,90 @@ ExecutionDevice = TypedDict('ExecutionDevice',
 	'video_memory' : ExecutionDeviceVideoMemory,
 	'temperature' : ExecutionDeviceTemperature,
 	'utilization' : ExecutionDeviceUtilization
+})
+
+OperatingSystemInfo = TypedDict('OperatingSystemInfo',
+{
+	'name' : str,
+	'architecture' : str,
+	'platform' : str,
+	'boot_time' : str,
+	'uptime_seconds' : int
+})
+PythonInfo = TypedDict('PythonInfo',
+{
+	'version' : str,
+	'implementation' : str
+})
+CpuFrequency = TypedDict('CpuFrequency',
+{
+	'current' : float,
+	'min' : float,
+	'max' : float
+})
+CpuInfo = TypedDict('CpuInfo',
+{
+	'model' : Optional[str],
+	'physical_cores' : Optional[int],
+	'logical_cores' : Optional[int],
+	'usage_percent' : float,
+	'frequency' : Optional[CpuFrequency]
+}, total = False)
+RamInfo = TypedDict('RamInfo',
+{
+	'total' : int,
+	'available' : int,
+	'used' : int,
+	'free' : int,
+	'percent' : float,
+	'swap_total' : int,
+	'swap_used' : int,
+	'swap_free' : int,
+	'swap_percent' : float
+})
+DiskInfo = TypedDict('DiskInfo',
+{
+	'filesystem' : str,
+	'total' : int,
+	'used' : int,
+	'free' : int,
+	'percent' : float
+})
+TemperatureSensor = TypedDict('TemperatureSensor',
+{
+	'current' : float,
+	'high' : Optional[float],
+	'critical' : Optional[float]
+})
+TemperatureInfo : TypeAlias = Dict[str, TemperatureSensor]
+NetworkInfo = TypedDict('NetworkInfo',
+{
+	'bytes_sent' : int,
+	'bytes_recv' : int,
+	'packets_sent' : int,
+	'packets_recv' : int,
+	'errin' : int,
+	'errout' : int,
+	'dropin' : int,
+	'dropout' : int,
+	'interfaces' : Dict[str, Any]
+})
+LoadAverage = TypedDict('LoadAverage',
+{
+	'load1' : float,
+	'load5' : float,
+	'load15' : float
+})
+SystemInfo = TypedDict('SystemInfo',
+{
+	'operating_system' : OperatingSystemInfo,
+	'python' : PythonInfo,
+	'cpu' : CpuInfo,
+	'ram' : RamInfo,
+	'disk' : Optional[DiskInfo],
+	'temperatures' : Optional[TemperatureInfo],
+	'network' : NetworkInfo,
+	'load_average' : Optional[LoadAverage]
 })
 
 DownloadProvider = Literal['github', 'huggingface']
