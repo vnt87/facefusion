@@ -46,6 +46,11 @@ def check_version_match_websocket(websocket : WebSocket) -> Optional[str]:
 
 async def version_guard_middleware(scope : Scope, receive : Receive, send : Send, app : ASGIApp) -> None:
 	if scope['type'] == 'http':
+		# Skip version check for OPTIONS requests (CORS preflight)
+		if scope.get('method') == 'OPTIONS':
+			await app(scope, receive, send)
+			return
+
 		headers = Headers(scope = scope)
 		client_version = headers.get('X-API-Version')
 		server_version = get_api_version()
