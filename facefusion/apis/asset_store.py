@@ -10,68 +10,64 @@ from facefusion.types import AssetId, AssetStore, AssetType, AudioAsset, AudioFo
 ASSET_STORE : AssetStore = {}
 
 
-def create_asset(session_id : SessionId, asset_type : AssetType, file_path : str) -> Optional[AudioAsset | ImageAsset | VideoAsset]:
+def create_asset(session_id : SessionId, asset_type : AssetType, asset_path : str) -> Optional[AudioAsset | ImageAsset | VideoAsset]:
 	asset_id = str(uuid.uuid4())
-	media_type = detect_media_type(file_path)
+	asset_name = get_file_name(asset_path)
+	asset_format = get_file_format(asset_path)
+	asset_size = os.path.getsize(asset_path)
+	media_type = detect_media_type(asset_path)
+	created_at = datetime.now()
+	expires_at = created_at + timedelta(hours = 2)
 
-	if media_type:
-		file_name = get_file_name(file_path)
-		file_format = get_file_format(file_path)
-		file_size = os.path.getsize(file_path)
-		created_at = datetime.now()
-		expires_at = created_at + timedelta(hours = 2)
+	if session_id not in ASSET_STORE:
+		ASSET_STORE[session_id] = {}
 
-		if session_id not in ASSET_STORE:
-			ASSET_STORE[session_id] = {}
+	if media_type == 'audio':
+		ASSET_STORE[session_id][asset_id] = cast(AudioAsset,
+		{
+			'id': asset_id,
+			'created_at': created_at,
+			'expires_at': expires_at,
+			'type': asset_type,
+			'media': media_type,
+			'name': asset_name,
+			'format': cast(AudioFormat, asset_format),
+			'size': asset_size,
+			'path': asset_path,
+			'metadata': extract_audio_metadata(asset_path)
+		})
 
-		if media_type == 'audio':
-			ASSET_STORE[session_id][asset_id] = cast(AudioAsset,
-			{
-				'id': asset_id,
-				'created_at': created_at,
-				'expires_at': expires_at,
-				'type': asset_type,
-				'media': media_type,
-				'name': file_name,
-				'format': cast(AudioFormat, file_format),
-				'size': file_size,
-				'path': file_path,
-				'metadata': extract_audio_metadata(file_path)
-			})
+	if media_type == 'image':
+		ASSET_STORE[session_id][asset_id] = cast(ImageAsset,
+		{
+			'id': asset_id,
+			'created_at': created_at,
+			'expires_at': expires_at,
+			'type': asset_type,
+			'media': media_type,
+			'name': asset_name,
+			'format': cast(ImageFormat, asset_format),
+			'size': asset_size,
+			'path': asset_path,
+			'metadata': extract_image_metadata(asset_path)
+		})
 
-		if media_type == 'image':
-			ASSET_STORE[session_id][asset_id] = cast(ImageAsset,
-			{
-				'id': asset_id,
-				'created_at': created_at,
-				'expires_at': expires_at,
-				'type': asset_type,
-				'media': media_type,
-				'name': file_name,
-				'format': cast(ImageFormat, file_format),
-				'size': file_size,
-				'path': file_path,
-				'metadata': extract_image_metadata(file_path)
-			})
+	if media_type == 'video':
+		ASSET_STORE[session_id][asset_id] = cast(VideoAsset,
+		{
+			'id': asset_id,
+			'created_at': created_at,
+			'expires_at': expires_at,
+			'type': asset_type,
+			'media': media_type,
+			'name': asset_name,
+			'format': cast(VideoFormat, asset_format),
+			'size': asset_size,
+			'path': asset_path,
+			'metadata': extract_video_metadata(asset_path)
+		})
 
-		if media_type == 'video':
-			ASSET_STORE[session_id][asset_id] = cast(VideoAsset,
-			{
-				'id': asset_id,
-				'created_at': created_at,
-				'expires_at': expires_at,
-				'type': asset_type,
-				'media': media_type,
-				'name': file_name,
-				'format': cast(VideoFormat, file_format),
-				'size': file_size,
-				'path': file_path,
-				'metadata': extract_video_metadata(file_path)
-			})
-
-		return ASSET_STORE[session_id][asset_id]
-
-	return None
+	return ASSET_STORE[session_id].get(asset_id)
 
 
 def get_asset(session_id : SessionId, asset_id : AssetId) -> Optional[AudioAsset | ImageAsset | VideoAsset]:

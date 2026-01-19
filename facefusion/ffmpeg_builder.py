@@ -83,6 +83,10 @@ def unsafe_concat() -> List[Command]:
 	return [ '-f', 'concat', '-safe', '0' ]
 
 
+def strip_metadata() -> List[Command]:
+	return [ '-map_metadata', '-1' ]
+
+
 def set_pixel_format(video_encoder : VideoEncoder) -> List[Command]:
 	if video_encoder == 'rawvideo':
 		return [ '-pix_fmt', 'rgb24' ]
@@ -127,12 +131,8 @@ def set_media_resolution(video_resolution : str) -> List[Command]:
 	return [ '-s', video_resolution ]
 
 
-def set_image_quality(image_path : str, image_quality : int) -> List[Command]:
-	if get_file_format(image_path) == 'webp':
-		return [ '-q:v', str(image_quality) ]
-
-	image_compression = round(31 - (image_quality * 0.31))
-	return [ '-q:v', str(image_compression) ]
+def deep_copy_audio() -> List[Command]:
+	return [ '-q:a', '0' ]
 
 
 def set_audio_encoder(audio_codec : str) -> List[Command]:
@@ -177,6 +177,22 @@ def set_audio_quality(audio_encoder : AudioEncoder, audio_quality : int) -> List
 
 def set_audio_volume(audio_volume : int) -> List[Command]:
 	return [ '-filter:a', 'volume=' + str(audio_volume / 100) ]
+
+
+def deep_copy_image() -> List[Command]:
+	return [ '-q:v', '0' ]
+
+
+def set_image_quality(image_path : str, image_quality : int) -> List[Command]:
+	if get_file_format(image_path) == 'webp':
+		return [ '-q:v', str(image_quality) ]
+
+	image_compression = round(31 - (image_quality * 0.31))
+	return [ '-q:v', str(image_compression) ]
+
+
+def deep_copy_video() -> List[Command]:
+	return [ '-q:v', '0' ]
 
 
 def set_video_encoder(video_encoder : str) -> List[Command]:
