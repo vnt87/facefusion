@@ -26,7 +26,7 @@ REFERENCE_FACE_POSITION_GALLERY : Optional[gradio.Gallery] = None
 REFERENCE_FACE_DISTANCE_SLIDER : Optional[gradio.Slider] = None
 
 
-def render() -> None:
+def render(simple : bool = False) -> None:
 	global FACE_SELECTOR_MODE_DROPDOWN
 	global FACE_SELECTOR_ORDER_DROPDOWN
 	global FACE_SELECTOR_GENDER_DROPDOWN
@@ -53,10 +53,11 @@ def render() -> None:
 	FACE_SELECTOR_MODE_DROPDOWN = gradio.Dropdown(
 		label = translator.get('uis.face_selector_mode_dropdown'),
 		choices = facefusion.choices.face_selector_modes,
-		value = state_manager.get_item('face_selector_mode')
+		value = state_manager.get_item('face_selector_mode'),
+		visible = not simple
 	)
 	REFERENCE_FACE_POSITION_GALLERY = gradio.Gallery(**reference_face_gallery_options)
-	with gradio.Group():
+	with gradio.Group(visible = not simple):
 		with gradio.Row():
 			FACE_SELECTOR_ORDER_DROPDOWN = gradio.Dropdown(
 				label = translator.get('uis.face_selector_order_dropdown'),
@@ -89,7 +90,7 @@ def render() -> None:
 		step = calculate_float_step(facefusion.choices.reference_face_distance_range),
 		minimum = facefusion.choices.reference_face_distance_range[0],
 		maximum = facefusion.choices.reference_face_distance_range[-1],
-		visible = 'reference' in state_manager.get_item('face_selector_mode')
+		visible = 'reference' in state_manager.get_item('face_selector_mode') and not simple
 	)
 	register_ui_component('face_selector_mode_dropdown', FACE_SELECTOR_MODE_DROPDOWN)
 	register_ui_component('face_selector_order_dropdown', FACE_SELECTOR_ORDER_DROPDOWN)
