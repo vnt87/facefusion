@@ -55,6 +55,37 @@ commands:
 ```
 
 
+
+Tech Stack
+----------
+
+- **Python**: Core programming language.
+- **Gradio**: Web-based user interface.
+- **ONNX / ONNX Runtime**: Machine learning model inference.
+- **OpenCV**: Computer vision and image processing.
+- **NumPy**: Numerical computing.
+
+
+Project Structure
+-----------------
+
+```
+facefusion/
+├── .github/           # GitHub Actions and templates
+├── facefusion/        # Main application package
+│   ├── jobs/          # Job management
+│   ├── processors/    # Face manipulation processors
+│   ├── uis/           # User interface components
+│   ├── workflows/     # Workflow definitions
+│   └── ...
+├── tests/             # Unit and integration tests
+├── facefusion.py      # Entry point script
+├── install.py         # Installation script
+├── requirements.txt   # Python dependencies
+└── run.bat            # Windows execution script
+```
+
+
 Documentation
 -------------
 
