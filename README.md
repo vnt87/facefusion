@@ -86,6 +86,43 @@ facefusion/
 ```
 
 
+Content Censorship (Removed)
+----------------------------
+
+The original Facefusion tried to censor its user with a censorship system that utilized a multi-model ensemble to detect NSFW content. It employed three distinct models:
+- **EraX (nsfw_1)**
+- **Marqo (nsfw_2)**
+- **Freepik (nsfw_3)**
+
+A majority vote logic was applied, where content was flagged only if at least two of the three models agreed on the classification. This has been then removed from this version to allow true freedome and more importantly not adding unnecessary processing overhead to the application.
+
+
+Integrity Check (Removed)
+-------------------------
+
+The application previously included an internal integrity check that verified the hash of `facefusion/content_analyser.py` on startup. This was intended to prevent unauthorized modifications to the content analysis logic. Having something like this in a non-commercial product is a completely dumb idea. To disable it, remove the hash check in `facefusion/core.py`:
+
+```diff
+ def common_pre_check() -> bool:
+ 	common_modules =\
+ 	[
+ 		content_analyser,
+ 		face_classifier,
+ 		face_detector,
+ 		face_landmarker,
+ 		face_masker,
+ 		face_recognizer,
+ 		voice_extractor
+ 	]
+ 
+-	content_analyser_content = inspect.getsource(content_analyser).encode()
+-	content_analyser_hash = hash_helper.create_hash(content_analyser_content)
+-
+-	return all(module.pre_check() for module in common_modules) and content_analyser_hash == '9b67696d'
++	return all(module.pre_check() for module in common_modules)
+```
+
+
 Documentation
 -------------
 
