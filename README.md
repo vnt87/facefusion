@@ -13,7 +13,7 @@ Modern Frontend
 
 This fork includes a new, modern web interface built with React and Shadcn UI.
 
-![Frontend Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
+![Frontend Preview](.github/preview_react.png)
 <!-- TODO: Update with actual screenshot of new frontend -->
 
 ### Features
