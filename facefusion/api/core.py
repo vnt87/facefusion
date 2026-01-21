@@ -18,9 +18,12 @@ def create_app() -> FastAPI:
 	)
 
 	from .endpoints import router
-	from .websocket import websocket_endpoint
+	from .websocket import websocket_endpoint, setup_logging
 	
 	app.include_router(router)
 	app.websocket("/ws")(websocket_endpoint)
+	
+	# Setup logging to broadcast to WebSocket clients
+	setup_logging()
 
 	return app

@@ -13,7 +13,7 @@ call venv\Scripts\activate.bat
 
 :: Start Backend API in a new window
 echo Starting Backend API...
-start "FaceFusion API" python facefusion.py run-api
+start "FaceFusion API" python facefusion.py run-api --log-level debug
 
 :: Start Frontend
 cd facefusion-web

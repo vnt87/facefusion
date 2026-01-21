@@ -127,7 +127,13 @@ async def start_process(request: ProcessRequest, background_tasks: BackgroundTas
 	
 	# Run processing in background
 	def run_processing():
-		conditional_process()
+		try:
+			conditional_process()
+		except Exception as e:
+			import traceback
+			from facefusion import logger
+			error_msg = f"Processing failed: {str(e)}\n{traceback.format_exc()}"
+			logger.error(error_msg, __name__)
 	
 	background_tasks.add_task(run_processing)
 	

@@ -49,7 +49,7 @@ function Dashboard() {
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const { logs, progress, status, isConnected, isComplete, clearLogs } = useWebSocket()
+  const { logs, progress, status, isConnected, isComplete, isError, currentFrame: progressFrame, totalFrames, speed, executionProviders, clearLogs } = useWebSocket()
 
   // Upload mutations
   const uploadSourceMutation = useMutation({
@@ -111,12 +111,12 @@ function Dashboard() {
     },
   })
 
-  // Reset processing state when complete
+  // Reset processing state when complete or error
   useEffect(() => {
-    if (isComplete && isProcessing) {
+    if ((isComplete || isError) && isProcessing) {
       setIsProcessing(false)
     }
-  }, [isComplete, isProcessing])
+  }, [isComplete, isError, isProcessing])
 
   // Generate preview when conditions are met
   const updatePreview = useCallback(async () => {
@@ -234,6 +234,7 @@ function Dashboard() {
           <div className="flex gap-2">
             <Button
               variant="outline"
+              size="lg"
               onClick={handleReset}
               className="gap-2 border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-white"
             >
@@ -266,6 +267,11 @@ function Dashboard() {
           progress={progress}
           status={status}
           isConnected={isConnected}
+          isError={isError}
+          currentFrame={progressFrame}
+          totalFrames={totalFrames}
+          speed={speed}
+          executionProviders={executionProviders}
         />
 
         {/* File Uploaders */}

@@ -34,7 +34,6 @@ export function FileUploader({
     onClear,
     localFile
 }: FileUploaderProps) {
-    const [dragActive, setDragActive] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -55,12 +54,13 @@ export function FileUploader({
         }
     }, [onFileSelect])
 
+    const hasPreview = previewUrl && uploadedFile
+
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept,
         multiple: false,
-        onDragEnter: () => setDragActive(true),
-        onDragLeave: () => setDragActive(false)
+        noClick: !!hasPreview // Disable click on root if preview exists
     })
 
     const handleClear = () => {
@@ -71,8 +71,6 @@ export function FileUploader({
         }
         onClear?.()
     }
-
-    const hasPreview = previewUrl && uploadedFile
 
     return (
         <Card className="overflow-hidden">
@@ -96,12 +94,16 @@ export function FileUploader({
             </CardHeader>
             <CardContent>
                 {hasPreview ? (
-                    <div className="relative rounded-lg overflow-hidden bg-zinc-800">
+                    <div
+                        {...getRootProps()}
+                        className="relative rounded-lg overflow-hidden bg-zinc-800 cursor-pointer group"
+                    >
+                        <input {...getInputProps()} />
                         {uploadedFile.is_image && (
                             <img
                                 src={previewUrl}
                                 alt={uploadedFile.filename}
-                                className="w-full h-48 object-contain"
+                                className="w-full h-96 object-contain"
                             />
                         )}
                         {uploadedFile.is_video && (
@@ -109,20 +111,37 @@ export function FileUploader({
                                 ref={videoRef}
                                 src={previewUrl}
                                 controls
-                                className="w-full h-48 object-contain"
+                                className="w-full h-96 object-contain"
                                 preload="metadata"
                             />
                         )}
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 pointer-events-none">
                             <p className="text-xs text-white truncate">{uploadedFile.filename}</p>
                         </div>
+
+                        {/* Drag Overlay */}
+                        {isDragActive && (
+                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white border-2 border-primary border-dashed rounded-lg z-10 pointer-events-none">
+                                <Upload className="h-10 w-10 mb-2 text-primary" />
+                                <p className="font-medium">Drop to replace</p>
+                            </div>
+                        )}
+
+                        {/* Hover Overlay (optional hint) */}
+                        {!isDragActive && (
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none">
+                                <div className="bg-black/50 px-3 py-1 rounded-full text-xs text-white backdrop-blur-sm">
+                                    Drop to replace
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div
                         {...getRootProps()}
                         className={cn(
                             'flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors',
-                            isDragActive || dragActive
+                            isDragActive
                                 ? 'border-primary bg-primary/5'
                                 : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
                             isLoading && 'pointer-events-none opacity-50'

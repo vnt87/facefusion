@@ -93,6 +93,21 @@ def process_video() -> ErrorCode:
 					if not future.cancelled():
 						future.result()
 						progress.update()
+						try:
+							from facefusion.api.websocket import manager
+							percentage = (progress.n / progress.total) * 100 if progress.total else 0
+							speed = progress.format_dict.get('rate', 0) or 0
+							execution_providers = ','.join(state_manager.get_item('execution_providers') or [])
+							manager.broadcast_progress_sync(
+								percentage,
+								progress.desc or 'Processing',
+								progress.n,
+								progress.total or 0,
+								speed,
+								execution_providers
+							)
+						except Exception:
+							pass
 
 		for processor_module in get_processors_modules(state_manager.get_item('processors')):
 			processor_module.post_process()

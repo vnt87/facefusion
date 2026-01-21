@@ -43,6 +43,12 @@ def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateP
 
 def update_progress(progress : tqdm, frame_number : int) -> None:
 	progress.update(frame_number - progress.n)
+	try:
+		from facefusion.api.websocket import manager
+		percentage = (progress.n / progress.total) * 100 if progress.total else 0
+		manager.broadcast_progress_sync(percentage, progress.desc or 'Processing')
+	except Exception:
+		pass
 
 
 def run_ffmpeg(commands : List[Command]) -> subprocess.Popen[bytes]:
@@ -108,6 +114,9 @@ def get_available_encoder_set() -> EncoderSet:
 
 
 def extract_frames(target_path : str, temp_video_resolution : Resolution, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	if not temp_video_fps:
+		logger.warn('Video FPS not detected, defaulting to 25.0', __name__)
+		temp_video_fps = 25.0
 	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = ffmpeg_builder.chain(
