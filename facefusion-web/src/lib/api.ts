@@ -42,11 +42,42 @@ export const getState = async () => {
 };
 
 // Start processing
-export const startProcess = async (options?: { outputPath?: string; processors?: string[] }) => {
+export const startProcess = async (options?: {
+    outputPath?: string;
+    processors?: string[];
+    trimFrameStart?: number;
+    trimFrameEnd?: number;
+}) => {
     const response = await api.post('/process/start', {
         output_path: options?.outputPath,
         processors: options?.processors,
+        trim_frame_start: options?.trimFrameStart,
+        trim_frame_end: options?.trimFrameEnd,
     });
+    return response.data;
+};
+
+// Detect faces in target
+export const detectFaces = async (frameNumber: number = 0): Promise<FaceDetectionResponse> => {
+    const response = await api.post('/detect-faces', { frame_number: frameNumber });
+    return response.data;
+};
+
+// Get preview frame with face swap
+export const getPreviewFrame = async (
+    frameNumber: number = 0,
+    referenceFacePosition: number = 0
+): Promise<PreviewFrameResponse> => {
+    const response = await api.post('/preview-frame', {
+        frame_number: frameNumber,
+        reference_face_position: referenceFacePosition
+    });
+    return response.data;
+};
+
+// Get video info
+export const getVideoInfo = async (): Promise<VideoInfoResponse> => {
+    const response = await api.get('/video-info');
     return response.data;
 };
 
@@ -70,3 +101,30 @@ export interface ProcessResponse {
     status: string;
     output_path: string | null;
 }
+
+export interface DetectedFace {
+    index: number;
+    bounding_box: number[];
+    image_base64: string;
+}
+
+export interface FaceDetectionResponse {
+    faces: DetectedFace[];
+    frame_number: number;
+    total_faces: number;
+}
+
+export interface PreviewFrameResponse {
+    image_base64: string;
+    frame_number: number;
+    has_face_swap: boolean;
+}
+
+export interface VideoInfoResponse {
+    frame_count: number;
+    fps: number;
+    duration: number;
+    width: number;
+    height: number;
+}
+

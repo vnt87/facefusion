@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, Image, Video } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,8 +15,10 @@ interface FileUploaderProps {
         filename: string
         is_image: boolean
         is_video: boolean
+        file_id?: string
     } | null
     onClear?: () => void
+    localFile?: File | null
 }
 
 export function FileUploader({
@@ -29,9 +31,23 @@ export function FileUploader({
     onFileSelect,
     isLoading = false,
     uploadedFile,
-    onClear
+    onClear,
+    localFile
 }: FileUploaderProps) {
     const [dragActive, setDragActive] = useState(false)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    // Create preview URL from local file
+    useEffect(() => {
+        if (localFile) {
+            const url = URL.createObjectURL(localFile)
+            setPreviewUrl(url)
+            return () => URL.revokeObjectURL(url)
+        } else {
+            setPreviewUrl(null)
+        }
+    }, [localFile])
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length > 0) {
@@ -47,38 +63,59 @@ export function FileUploader({
         onDragLeave: () => setDragActive(false)
     })
 
+    const handleClear = () => {
+        setPreviewUrl(null)
+        if (videoRef.current) {
+            videoRef.current.pause()
+            videoRef.current.src = ''
+        }
+        onClear?.()
+    }
+
+    const hasPreview = previewUrl && uploadedFile
+
     return (
         <Card className="overflow-hidden">
             <CardHeader className="pb-3">
-                <CardTitle className="text-lg">{title}</CardTitle>
-                <CardDescription>{description}</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-lg">{title}</CardTitle>
+                        <CardDescription>{description}</CardDescription>
+                    </div>
+                    {hasPreview && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-zinc-400 hover:text-white"
+                            onClick={handleClear}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
             </CardHeader>
             <CardContent>
-                {uploadedFile ? (
-                    <div className="relative flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                            {uploadedFile.is_image ? (
-                                <Image className="h-5 w-5 text-primary" />
-                            ) : (
-                                <Video className="h-5 w-5 text-primary" />
-                            )}
-                        </div>
-                        <div className="flex-1 truncate">
-                            <p className="truncate text-sm font-medium">{uploadedFile.filename}</p>
-                            <p className="text-xs text-muted-foreground">
-                                {uploadedFile.is_image ? 'Image' : 'Video'}
-                            </p>
-                        </div>
-                        {onClear && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={onClear}
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
+                {hasPreview ? (
+                    <div className="relative rounded-lg overflow-hidden bg-zinc-800">
+                        {uploadedFile.is_image && (
+                            <img
+                                src={previewUrl}
+                                alt={uploadedFile.filename}
+                                className="w-full h-48 object-contain"
+                            />
                         )}
+                        {uploadedFile.is_video && (
+                            <video
+                                ref={videoRef}
+                                src={previewUrl}
+                                controls
+                                className="w-full h-48 object-contain"
+                                preload="metadata"
+                            />
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                            <p className="text-xs text-white truncate">{uploadedFile.filename}</p>
+                        </div>
                     </div>
                 ) : (
                     <div
@@ -97,7 +134,7 @@ export function FileUploader({
                             isDragActive ? 'text-primary' : 'text-muted-foreground'
                         )} />
                         <p className="text-sm text-muted-foreground">
-                            {isDragActive ? 'Drop file here' : 'Drag & drop or click to upload'}
+                            {isLoading ? 'Uploading...' : isDragActive ? 'Drop file here' : 'Drag & drop or click to upload'}
                         </p>
                     </div>
                 )}
