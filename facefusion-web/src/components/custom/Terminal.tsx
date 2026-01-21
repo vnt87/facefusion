@@ -9,23 +9,21 @@ interface TerminalProps {
 }
 
 export function Terminal({ logs, className }: TerminalProps) {
-    const scrollRef = useRef<HTMLDivElement>(null)
+    const bottomRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        }
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [logs])
 
     return (
-        <Card className={cn('overflow-hidden', className)}>
-            <CardHeader className="pb-3">
+        <Card className={cn('flex flex-col h-full overflow-hidden', className)}>
+            <CardHeader className="pb-3 shrink-0">
                 <CardTitle className="text-lg">Terminal</CardTitle>
                 <CardDescription>Processing output and logs</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-                <ScrollArea className="h-48 w-full" ref={scrollRef}>
-                    <div className="bg-zinc-950 p-4 font-mono text-xs text-zinc-100">
+            <CardContent className="p-0 flex-1 min-h-0">
+                <ScrollArea className="h-full w-full">
+                    <div className="bg-zinc-950 p-4 font-mono text-xs text-zinc-100 min-h-full">
                         {logs.length === 0 ? (
                             <div className="text-zinc-500">Waiting for processing...</div>
                         ) : (
@@ -36,6 +34,7 @@ export function Terminal({ logs, className }: TerminalProps) {
                                 </div>
                             ))
                         )}
+                        <div ref={bottomRef} />
                     </div>
                 </ScrollArea>
             </CardContent>
