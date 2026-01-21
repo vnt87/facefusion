@@ -72,6 +72,15 @@ def route(args : Args) -> None:
 		ui.init()
 		ui.launch()
 
+	if state_manager.get_item('command') == 'run-api':
+		import uvicorn
+		from facefusion.api.core import create_app
+
+		if not common_pre_check() or not processors_pre_check():
+			hard_exit(2)
+		app = create_app()
+		uvicorn.run(app, host = '0.0.0.0', port = 8000)
+
 	if state_manager.get_item('command') == 'headless-run':
 		if not job_manager.init_jobs(state_manager.get_item('jobs_path')):
 			hard_exit(1)

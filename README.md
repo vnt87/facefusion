@@ -1,17 +1,27 @@
 FaceFusion
 ==========
 
-> Industry leading face manipulation platform.
-
-[![Build Status](https://img.shields.io/github/actions/workflow/status/facefusion/facefusion/ci.yml.svg?branch=master)](https://github.com/facefusion/facefusion/actions?query=workflow:ci)
-[![Coverage Status](https://img.shields.io/coveralls/facefusion/facefusion.svg)](https://coveralls.io/r/facefusion/facefusion)
-![License](https://img.shields.io/badge/license-OpenRAIL--AS-green)
+This is a fork of the original [FaceFusion](https://github.com/facefusion/facefusion) project with a modern frontend built with React and Vite.
 
 
 Preview
 -------
 
-![Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
+
+Modern Frontend
+---------------
+
+This fork includes a new, modern web interface built with React and Shadcn UI.
+
+![Frontend Preview](https://raw.githubusercontent.com/facefusion/facefusion/master/.github/preview.png?sanitize=true)
+<!-- TODO: Update with actual screenshot of new frontend -->
+
+### Features
+- **Modern UI**: Built with React, Vite, and Shadcn UI.
+- **Dark Mode**: Sleek dark theme with "Bai Jamjuree" font.
+- **Real-time Updates**: Live terminal logs and progress tracking via WebSocket.
+- **Drag & Drop**: Easy file upload for source and target.
+
 
 
 Installation
@@ -25,8 +35,24 @@ Usage
 
 Run the command:
 
+### Standard (Gradio)
 ```
 python facefusion.py [commands] [options]
+```
+
+### Modern Frontend (React)
+We provide convenient scripts to launch both the backend API and the frontend dev server:
+
+**Windows:**
+```batch
+run_web.bat
+```
+
+**Linux / macOS:**
+```bash
+./run_web.sh
+```
+
 
 options:
   -h, --help                                      show this help message and exit
@@ -65,6 +91,13 @@ Tech Stack
 - **OpenCV**: Computer vision and image processing.
 - **NumPy**: Numerical computing.
 
+**Frontend:**
+- **React**: UI Library.
+- **Vite**: Build tool.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Shadcn UI**: Component library.
+
+
 
 Project Structure
 -----------------
@@ -82,19 +115,25 @@ facefusion/
 ├── facefusion.py      # Entry point script
 ├── install.py         # Installation script
 ├── requirements.txt   # Python dependencies
-└── run.bat            # Windows execution script
+├── run.bat            # Windows execution script
+├── run_web.bat        # Windows script for Web UI
+├── run_web.sh         # Linux/Mac script for Web UI
+└── facefusion-web/    # React Frontend
+    ├── src/
+    ├── package.json
+    └── ...
+
 ```
 
 
-Content Censorship (Removed)
+Content Censorship
 ----------------------------
 
 The original Facefusion tried to censor its user with a censorship system that utilized a multi-model ensemble to detect NSFW content. It employed three distinct models:
 - **EraX (nsfw_1)**
 - **Marqo (nsfw_2)**
 - **Freepik (nsfw_3)**
-
-A majority vote logic was applied, where content was flagged only if at least two of the three models agreed on the classification. This has been then removed from this version to allow true freedome and more importantly not adding unnecessary processing overhead to the application.
+A majority vote logic was applied, where content was flagged only if at least two of the three models agreed on the classification. At NVAI we believe that content moderation should be up to the descretion of the user, not the tool, so naturally this feature has been removed.
 
 
 Integrity Check (Removed)
