@@ -36,28 +36,64 @@ image = (
 @app.function(
     image=image,
     gpu='any',
-    timeout=3600
+    timeout=3600,
+    network_file_systems={"/data": modal.NetworkFileSystem.from_name("facefusion-storage", create_if_missing=True)}
 )
-def run_remote(args: Args) -> bytes:
+def run_remote(args: Args, file_uploads: Dict[str, bytes] = None) -> bytes:
     import os
     import sys
     # FORCE /root/facefusion to the absolute front of sys.path
     if '/root/facefusion' not in sys.path:
         sys.path.insert(0, '/root/facefusion')
     
-    # Force absolute imports from our mounted directory
-    import facefusion.state_manager as sm
-    # Force absolute imports from our mounted directory
-    # Force absolute imports from our mounted directory
+    # Remote storage setup
+    remote_storage_path = '/data'
+    remote_jobs_path = f'{remote_storage_path}/jobs'
+    remote_temp_path = f'{remote_storage_path}/temp'
+    os.makedirs(remote_jobs_path, exist_ok=True)
+    os.makedirs(remote_temp_path, exist_ok=True)
+
+    # Handle file uploads if any
+    if file_uploads:
+        upload_dir = f'{remote_temp_path}/uploads'
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        if 'source_paths' in args and args['source_paths']:
+            new_source_paths = []
+            for i, _ in enumerate(args['source_paths']):
+                key = f'source_{i}'
+                if key in file_uploads:
+                    # Determine extension from original path
+                    ext = os.path.splitext(args['source_paths'][i])[1]
+                    dest = f"{upload_dir}/{key}{ext}"
+                    with open(dest, 'wb') as f:
+                        f.write(file_uploads[key])
+                    new_source_paths.append(dest)
+            if new_source_paths:
+                args['source_paths'] = new_source_paths
+                
+        if 'target_path' in args and args['target_path']:
+             key = 'target'
+             if key in file_uploads:
+                 ext = os.path.splitext(args['target_path'])[1]
+                 dest = f"{upload_dir}/{key}{ext}"
+                 with open(dest, 'wb') as f:
+                     f.write(file_uploads[key])
+                 args['target_path'] = dest
+
+    # Force absolute imports
     import facefusion.state_manager as sm
     import facefusion.core as core
-    import facefusion.app_context as app_context
     from facefusion.jobs import job_manager, job_runner
     
+    # Handle output path - redirect to remote temp
+    if 'output_path' in args:
+        ext = os.path.splitext(args['output_path'])[1] or '.png'
+        remote_output_path = f"{remote_temp_path}/output_{int(time.time())}{ext}"
+        args['output_path'] = remote_output_path
+
     # GOD MODE STATE PATCH
-    # Unify everything into one dictionary and override get_item/set_item
     remote_state = dict(args)
-    # Ensure modal flag is FALSE in remote to avoid recursion
     remote_state['modal'] = False
     
     def patched_get_item(key):
@@ -66,82 +102,31 @@ def run_remote(args: Args) -> bytes:
     def patched_set_item(key, value):
         if value is not None:
             remote_state[key] = value
-        else:
-            # Protect critical keys from being wiped by apply_args(step_args)
-            if key not in ['execution_queue_count', 'download_scope', 'voice_extractor_model']: # keys that are safely None
-                 # Log only if needed, or silently ignore
-                 pass
 
-    # Patch EVERY module that might be state_manager
-    import sys
-    import facefusion.core as core
+    # Patch modules
+    sm.get_item = patched_get_item
+    sm.set_item = patched_set_item
+    core.state_manager = sm
     
-    # ID CHECK
-    print(f"[MODAL_DEBUG] ID of local sm: {id(sm)}")
-    if hasattr(core, 'state_manager'):
-        print(f"[MODAL_DEBUG] ID of core.state_manager: {id(core.state_manager)}")
-        print(f"[MODAL_DEBUG] core.state_manager file: {getattr(core.state_manager, '__file__', 'unknown')}")
-        
-        # Force patch
-        core.state_manager.get_item = patched_get_item
-        core.state_manager.set_item = patched_set_item
-        if hasattr(core.state_manager, 'STATE_SET'):
-             print(f"[MODAL_DEBUG] Injecting into core.state_manager.STATE_SET (Size: {len(core.state_manager.STATE_SET['cli'])})")
-             core.state_manager.STATE_SET['cli'].update(remote_state)
-             core.state_manager.STATE_SET['ui'].update(remote_state)
-    else:
-        print("[MODAL_DEBUG] core.state_manager NOT FOUND")
-
-    for name, module in list(sys.modules.items()):
-        if 'state_manager' in name:
-            print(f"[MODAL_DEBUG] Patching {name} (ID: {id(module)})")
-            module.get_item = patched_get_item
-            module.set_item = patched_set_item
-            if hasattr(module, 'STATE_SET'):
-                module.STATE_SET['cli'].update(remote_state)
-                module.STATE_SET['ui'].update(remote_state)
-            print(f"[MODAL_DEBUG] Patching {name} ({getattr(module, '__file__', 'no file')})")
-            module.get_item = patched_get_item
-            module.set_item = patched_set_item
-            if hasattr(module, 'STATE_SET'):
-                module.STATE_SET['cli'].update(remote_state)
-                module.STATE_SET['ui'].update(remote_state)
-    
-    # PATCH APP CONTEXT
+    # Force context
     import facefusion.app_context as app_context
     app_context.detect_app_context = lambda: 'cli'
     
-    # Verify injection
-    print(f"[MODAL_DEBUG] Patched get_item('processors'): {patched_get_item('processors')}")
-
-    # Force remote-friendly paths
-    remote_jobs_path = '/tmp/facefusion/jobs'
-    remote_temp_path = '/tmp/facefusion/temp'
-    
-    print(f"[MODAL_DEBUG] Setting remote jobs_path to: {remote_jobs_path}")
-    
-    # Inject into state
-    state_manager.STATE_SET['cli'].update({
+    # Path injection
+    remote_state.update({
         'jobs_path': remote_jobs_path,
         'temp_path': remote_temp_path
     })
-    state_manager.STATE_SET['ui'].update({
-        'jobs_path': remote_jobs_path,
-        'temp_path': remote_temp_path
-    })
-
-    # Initialize Job Manager with remote path
     job_manager.init_jobs(remote_jobs_path)
-    job_manager.JOBS_PATH = remote_jobs_path # Force it again
-    print(f"[MODAL_DEBUG] job_manager.JOBS_PATH is now: {job_manager.JOBS_PATH}")
+    job_manager.JOBS_PATH = remote_jobs_path
     
     # Ensure models are downloaded
     if not core.common_pre_check() or not core.processors_pre_check():
         print("[MODAL_DEBUG] Pre-check failed")
-        return False
+        return None
 
     # Run processing
-    job_id = 'modal_job'
+    job_id = f'modal_job_{int(time.time())}'
     if job_manager.create_job(job_id):
         from facefusion.core import process_step
         from facefusion.args import reduce_step_args
@@ -149,8 +134,8 @@ def run_remote(args: Args) -> bytes:
         
         if job_manager.add_step(job_id, step_args) and job_manager.submit_job(job_id):
             if job_runner.run_job(job_id, process_step):
-                output_path = args.get('output_path')
-                if os.path.exists(output_path):
+                output_path = remote_state.get('output_path')
+                if output_path and os.path.exists(output_path):
                     with open(output_path, 'rb') as f:
                         return f.read()
     
@@ -164,10 +149,24 @@ RUN_LOCK = threading.Lock()
 def run(args: Args) -> bool:
     logger.info('Running on Modal...', __name__)
     
+    # Prepare file uploads
+    file_uploads = {}
+    source_paths = args.get('source_paths', [])
+    if source_paths:
+        for i, path in enumerate(source_paths):
+            if os.path.exists(path):
+                with open(path, 'rb') as f:
+                    file_uploads[f'source_{i}'] = f.read()
+    
+    target_path = args.get('target_path')
+    if target_path and os.path.exists(target_path):
+        with open(target_path, 'rb') as f:
+            file_uploads['target'] = f.read()
+
     with RUN_LOCK:
         try:
             with app.run():
-                output_content = run_remote.remote(args)
+                output_content = run_remote.remote(args, file_uploads)
                 
                 if output_content:
                     output_path = args.get('output_path')

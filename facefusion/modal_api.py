@@ -26,17 +26,31 @@ image = (
 @app.function(
     image=image,
     allow_concurrent_inputs=100,
-    timeout=3600
+    timeout=3600,
+    network_file_systems={"/data": modal.NetworkFileSystem.from_name("facefusion-storage", create_if_missing=True)}
 )
 @modal.asgi_app()
 def fastapi_app():
     import sys
+    import os
     # FORCE /root/facefusion to the absolute front of sys.path
     if '/root/facefusion' not in sys.path:
         sys.path.insert(0, '/root/facefusion')
 
-    # Force absolute imports to ensure we use the local code
+    # Force absolute imports
+    from facefusion import state_manager
     from facefusion.api.core import create_app
+    
+    # Remote storage setup
+    remote_storage_path = '/data'
+    remote_jobs_path = f'{remote_storage_path}/jobs'
+    remote_temp_path = f'{remote_storage_path}/temp'
+    os.makedirs(remote_jobs_path, exist_ok=True)
+    os.makedirs(remote_temp_path, exist_ok=True)
+    
+    # Inject paths into state manager
+    state_manager.set_item('jobs_path', remote_jobs_path)
+    state_manager.set_item('temp_path', remote_temp_path)
     
     # Initialize the app
     web_app = create_app()
