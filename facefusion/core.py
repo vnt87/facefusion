@@ -46,7 +46,7 @@ def route(args : Args) -> None:
 	if system_memory_limit and system_memory_limit > 0:
 		limit_system_memory(system_memory_limit)
 
-	if state_manager.get_item('modal'):
+	if state_manager.get_item('modal') and state_manager.get_item('command') != 'run-api':
 		from facefusion import modal_runner
 		if modal_runner.run(args):
 			hard_exit(0)
@@ -346,6 +346,53 @@ def process_step(job_id : str, step_index : int, step_args : Args) -> bool:
 
 
 def conditional_process() -> ErrorCode:
+	if state_manager.get_item('modal'):
+		from facefusion import modal_runner
+		# Robust state collection for Modal - include all critical keys
+		args = {
+			'processors': state_manager.get_item('processors'),
+			'source_paths': state_manager.get_item('source_paths'),
+			'target_path': state_manager.get_item('target_path'),
+			'output_path': state_manager.get_item('output_path'),
+			# Face detector
+			'face_detector_model': state_manager.get_item('face_detector_model'),
+			'face_detector_size': state_manager.get_item('face_detector_size'),
+			'face_detector_score': state_manager.get_item('face_detector_score'),
+			# Face landmarker
+			'face_landmarker_model': state_manager.get_item('face_landmarker_model'),
+			'face_landmarker_score': state_manager.get_item('face_landmarker_score'),
+			# Face selector
+			'face_selector_mode': state_manager.get_item('face_selector_mode'),
+			'face_selector_order': state_manager.get_item('face_selector_order'),
+			# Face masker
+			'face_occluder_model': state_manager.get_item('face_occluder_model'),
+			'face_parser_model': state_manager.get_item('face_parser_model'),
+			'face_mask_types': state_manager.get_item('face_mask_types'),
+			'face_mask_blur': state_manager.get_item('face_mask_blur'),
+			# Processors specific
+			'face_swapper_model': state_manager.get_item('face_swapper_model') or 'hyperswap_1a_256',
+			'face_swapper_pixel_boost': state_manager.get_item('face_swapper_pixel_boost'),
+			'face_swapper_weight': state_manager.get_item('face_swapper_weight'),
+			'face_enhancer_model': state_manager.get_item('face_enhancer_model'),
+			'face_enhancer_blend': state_manager.get_item('face_enhancer_blend'),
+			'frame_enhancer_model': state_manager.get_item('frame_enhancer_model'),
+			'frame_enhancer_blend': state_manager.get_item('frame_enhancer_blend'),
+			'lip_syncer_model': state_manager.get_item('lip_syncer_model'),
+			# Execution & Download
+			'execution_providers': state_manager.get_item('execution_providers'),
+			'execution_thread_count': state_manager.get_item('execution_thread_count'),
+			'execution_queue_count': state_manager.get_item('execution_queue_count'),
+			'download_providers': state_manager.get_item('download_providers'),
+			'download_scope': state_manager.get_item('download_scope'),
+			# Jobs & Temp
+			'jobs_path': state_manager.get_item('jobs_path'),
+			'temp_path': state_manager.get_item('temp_path'),
+		}
+		logger.info(f"[DEBUG] Manual state collection for Modal: {args}", __name__)
+		if modal_runner.run(args):
+			return 0
+		return 1
+
 	start_time = time()
 
 	for processor_module in get_processors_modules(state_manager.get_item('processors')):

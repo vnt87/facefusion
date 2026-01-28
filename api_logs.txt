@@ -1,0 +1,16 @@
+INFO:     Started server process [75582]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53779 - "WebSocket /ws" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:53784 - "WebSocket /ws" [accepted]
+INFO:     connection open
+INFO:     127.0.0.1:53794 - "POST /upload/source HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53795 - "POST /upload/target HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53796 - "POST /process/start HTTP/1.1" 200 OK
+[FACEFUSION.CORE] [DEBUG] Manual state collection for Modal: {'processors': ['face_swapper'], 'source_paths': ['/var/folders/1n/v7w7z8vs64z82jd_91fk0pdr6qczhz/T/api_uploads/source_e0063818-290f-41f4-bbc3-cc7fb9ace8e6.jpg'], 'target_path': '/var/folders/1n/v7w7z8vs64z82jd_91fk0pdr6qczhz/T/api_uploads/target_ef4df399-2a4d-4be4-85d2-e597adf643be.jpg', 'output_path': '/var/folders/1n/v7w7z8vs64z82jd_91fk0pdr6qczhz/T/api_uploads/outputs/output_14dda494-2283-4677-bd71-6cbe59c6e53e.jpg', 'face_detector_model': 'yolo_face', 'face_detector_size': '640x640', 'face_detector_score': 0.5, 'face_landmarker_model': '2dfan4', 'face_landmarker_score': 0.5, 'face_selector_mode': 'reference', 'face_selector_order': 'large-small', 'face_occluder_model': 'xseg_1', 'face_parser_model': 'bisenet_resnet_34', 'face_mask_types': ['box'], 'face_mask_blur': 0.3, 'face_swapper_model': 'hyperswap_1a_256', 'face_swapper_pixel_boost': '256x256', 'face_swapper_weight': 0.5, 'face_enhancer_model': 'gfpgan_1.4', 'face_enhancer_blend': 80, 'frame_enhancer_model': 'span_kendata_x4', 'frame_enhancer_blend': 80, 'lip_syncer_model': 'wav2lip_gan_96', 'execution_providers': ['coreml', 'cpu'], 'execution_thread_count': 8, 'execution_queue_count': None, 'download_providers': ['github', 'huggingface'], 'download_scope': None, 'jobs_path': '.jobs', 'temp_path': '/var/folders/1n/v7w7z8vs64z82jd_91fk0pdr6qczhz/T'}
+[FACEFUSION.MODAL_RUNNER] Running on Modal... App Name: facefusion_debug_1769583645
+[FACEFUSION.MODAL_RUNNER] Modal execution failed or returned no output
+INFO:     127.0.0.1:53907 - "GET /output/output_14dda494-2283-4677-bd71-6cbe59c6e53e.jpg HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53909 - "GET /output/output_14dda494-2283-4677-bd71-6cbe59c6e53e.jpg HTTP/1.1" 404 Not Found

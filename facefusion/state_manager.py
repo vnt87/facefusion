@@ -26,7 +26,14 @@ def init_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
 
 
 def get_item(key : Union[StateKey, ProcessorStateKey]) -> Any:
-	return get_state().get(key) #type:ignore[literal-required]
+	value = get_state().get(key) #type:ignore[literal-required]
+	if key == 'processors' and value is None:
+		from facefusion.app_context import detect_app_context
+		import os
+		if os.environ.get('MODAL_PROJECT_NAME'):
+			print(f"[MODAL_DEBUG] get_item('processors') is None! Context: {detect_app_context()}")
+			print(f"[MODAL_DEBUG] STATE_SET['cli'] keys: {list(STATE_SET['cli'].keys())}")
+	return value
 
 
 def set_item(key : Union[StateKey, ProcessorStateKey], value : Any) -> None:
