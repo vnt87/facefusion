@@ -19,6 +19,7 @@ class StateResponse(BaseModel):
 	target_path: Optional[str]
 	output_path: Optional[str]
 	processors: List[str]
+	modal: bool
 
 
 class ProcessRequest(BaseModel):
@@ -26,6 +27,7 @@ class ProcessRequest(BaseModel):
 	processors: Optional[List[str]] = None
 	trim_frame_start: Optional[int] = None
 	trim_frame_end: Optional[int] = None
+	modal: Optional[bool] = False
 
 
 class ProcessResponse(BaseModel):

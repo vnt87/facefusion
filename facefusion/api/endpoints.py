@@ -90,7 +90,8 @@ def get_state() -> StateResponse:
 		source_paths=state_manager.get_item('source_paths') or [],
 		target_path=state_manager.get_item('target_path'),
 		output_path=state_manager.get_item('output_path'),
-		processors=state_manager.get_item('processors') or ['face_swapper', 'face_enhancer']
+		processors=state_manager.get_item('processors') or ['face_swapper', 'face_enhancer'],
+		modal=state_manager.get_item('modal') or False
 	)
 
 
@@ -120,6 +121,12 @@ async def start_process(request: ProcessRequest, background_tasks: BackgroundTas
 		state_manager.set_item('trim_frame_start', request.trim_frame_start)
 	if request.trim_frame_end is not None:
 		state_manager.set_item('trim_frame_end', request.trim_frame_end)
+	
+	# Set modal flag
+	if request.modal:
+		state_manager.set_item('modal', True)
+	else:
+		state_manager.set_item('modal', False)
 	
 	# Check prerequisites
 	if not common_pre_check() or not processors_pre_check():

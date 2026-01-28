@@ -46,6 +46,12 @@ def route(args : Args) -> None:
 	if system_memory_limit and system_memory_limit > 0:
 		limit_system_memory(system_memory_limit)
 
+	if state_manager.get_item('modal'):
+		from facefusion import modal_runner
+		if modal_runner.run(args):
+			hard_exit(0)
+		hard_exit(1)
+
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
 		hard_exit(error_code)

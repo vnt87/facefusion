@@ -9,6 +9,8 @@ import { FaceSelector } from '@/components/custom/FaceSelector'
 import { FrameTrimmer } from '@/components/custom/FrameTrimmer'
 import { VideoResult } from '@/components/custom/VideoResult'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import {
   uploadSource,
   uploadTarget,
@@ -49,6 +51,7 @@ function Dashboard() {
 
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isModalEnabled, setIsModalEnabled] = useState(false)
 
   const { logs, progress, status, isConnected, isComplete, isError, outputPath, currentFrame: progressFrame, totalFrames, speed, executionProviders, clearLogs } = useWebSocket()
 
@@ -119,6 +122,22 @@ function Dashboard() {
     }
   }, [isComplete, isError, isProcessing])
 
+  // Fetch initial state
+  useEffect(() => {
+    const fetchState = async () => {
+      try {
+        const { getState } = await import('@/lib/api')
+        const state = await getState()
+        if (state.modal) {
+          setIsModalEnabled(true)
+        }
+      } catch (error) {
+        console.error('Failed to fetch initial state:', error)
+      }
+    }
+    fetchState()
+  }, [])
+
   // Generate preview when conditions are met
   const updatePreview = useCallback(async () => {
     if (!sourceFile || !targetFile || detectedFaces.length === 0) {
@@ -160,7 +179,9 @@ function Dashboard() {
 
   const handleProcess = () => {
     if (sourceFile && targetFile) {
-      const options: { trimFrameStart?: number; trimFrameEnd?: number } = {}
+      const options: { trimFrameStart?: number; trimFrameEnd?: number; modal?: boolean } = {
+        modal: isModalEnabled
+      }
       if (targetFile.is_video && videoInfo) {
         if (trimStart > 0) options.trimFrameStart = trimStart
         if (trimEnd < videoInfo.frame_count) options.trimFrameEnd = trimEnd
@@ -339,6 +360,20 @@ function Dashboard() {
                   </>
                 )}
               </Button>
+            </div>
+
+            {/* Modal Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="space-y-0.5">
+                <Label className="text-base text-zinc-200">Modal Processing</Label>
+                <p className="text-sm text-zinc-400">
+                  Offload processing to Modal.com cloud GPUs
+                </p>
+              </div>
+              <Switch
+                checked={isModalEnabled}
+                onCheckedChange={setIsModalEnabled}
+              />
             </div>
           </div>
         </div>

@@ -6,3 +6,4 @@ __pycache__
 .jobs
 .vscode
 /venv
+tests/test-assets/test-fps.mp4

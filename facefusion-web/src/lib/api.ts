@@ -47,12 +47,14 @@ export const startProcess = async (options?: {
     processors?: string[];
     trimFrameStart?: number;
     trimFrameEnd?: number;
+    modal?: boolean;
 }) => {
     const response = await api.post('/process/start', {
         output_path: options?.outputPath,
         processors: options?.processors,
         trim_frame_start: options?.trimFrameStart,
         trim_frame_end: options?.trimFrameEnd,
+        modal: options?.modal,
     });
     return response.data;
 };
@@ -101,6 +103,7 @@ export interface StateResponse {
     target_path: string | null;
     output_path: string | null;
     processors: string[];
+    modal: boolean;
 }
 
 export interface ProcessResponse {

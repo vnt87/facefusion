@@ -266,6 +266,14 @@ def create_halt_on_error_program() -> ArgumentParser:
 	return program
 
 
+def create_modal_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_misc = program.add_argument_group('misc')
+	group_misc.add_argument('--modal', help = translator.get('help.modal'), action = 'store_true', default = config.get_bool_value('misc', 'modal'))
+	job_store.register_job_keys([ 'modal' ])
+	return program
+
+
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('job_id', help = translator.get('help.job_id'))
@@ -289,7 +297,7 @@ def collect_step_program() -> ArgumentParser:
 
 
 def collect_job_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program() ], add_help = False)
+	return ArgumentParser(parents = [ create_execution_program(), create_download_providers_program(), create_memory_program(), create_log_level_program(), create_modal_program() ], add_help = False)
 
 
 def create_program() -> ArgumentParser:

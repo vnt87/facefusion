@@ -164,6 +164,7 @@ LOCALES : Locales =\
 			'system_memory_limit': 'limit the available RAM that can be used while processing',
 			'log_level': 'adjust the message severity displayed in the terminal',
 			'halt_on_error': 'halt the program once an error occurred',
+			'modal': 'run the program using modal.com',
 			'run': 'run the program',
 			'headless_run': 'run the program in headless mode',
 			'batch_run': 'run the program in batch mode',
