@@ -222,6 +222,11 @@ def replace_audio(target_path : str, audio_path : str, output_path : str) -> boo
 
 
 def merge_video(target_path : str, temp_video_fps : Fps, output_video_resolution : Resolution, output_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+	if not temp_video_fps:
+		logger.warn('Video FPS not detected, defaulting to 25.0', __name__)
+		temp_video_fps = 25.0
+	if not output_video_fps:
+		output_video_fps = temp_video_fps
 	output_video_encoder = state_manager.get_item('output_video_encoder')
 	output_video_quality = state_manager.get_item('output_video_quality')
 	output_video_preset = state_manager.get_item('output_video_preset')

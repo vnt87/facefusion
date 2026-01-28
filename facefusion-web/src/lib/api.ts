@@ -81,6 +81,12 @@ export const getVideoInfo = async (): Promise<VideoInfoResponse> => {
     return response.data;
 };
 
+// Get output file URL
+export const getOutputFileUrl = (outputPath: string): string => {
+    const filename = outputPath.split(/[\\/]/).pop() || 'output';
+    return `${API_BASE_URL}/output/${filename}`;
+};
+
 // Types
 export interface UploadResponse {
     file_id: string;

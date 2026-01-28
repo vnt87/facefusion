@@ -129,6 +129,11 @@ async def start_process(request: ProcessRequest, background_tasks: BackgroundTas
 	def run_processing():
 		try:
 			conditional_process()
+			# Broadcast completion
+			from facefusion.api.websocket import manager
+			output_path = state_manager.get_item('output_path')
+			if output_path:
+				manager.broadcast_complete_sync(output_path)
 		except Exception as e:
 			import traceback
 			from facefusion import logger

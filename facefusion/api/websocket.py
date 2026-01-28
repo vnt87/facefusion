@@ -80,6 +80,14 @@ class ConnectionManager:
 			except Exception:
 				pass
 
+	def broadcast_complete_sync(self, output_path: str):
+		"""Broadcast processing complete to all connected clients (thread-safe, sync)."""
+		if self._loop:
+			try:
+				asyncio.run_coroutine_threadsafe(self._broadcast_async("complete", {"output_path": output_path}), self._loop)
+			except Exception:
+				pass
+
 	async def _broadcast_async(self, msg_type: str, data: dict):
 		"""Internal async broadcast."""
 		message = {"type": msg_type, **data}

@@ -1,5 +1,7 @@
 import math
 from functools import lru_cache
+import shutil
+import subprocess
 from typing import List, Optional, Tuple
 
 import cv2
@@ -121,16 +123,30 @@ def detect_video_fps(video_path : str) -> Optional[float]:
 		if video_capture and video_capture.isOpened():
 			with thread_semaphore():
 				video_fps = video_capture.get(cv2.CAP_PROP_FPS)
+			if video_fps:
 				return video_fps
 
+		if shutil.which('ffprobe'):
+			commands = [ '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'default=noprint_wrappers=1:nokey=1', video_path ]
+			process = subprocess.Popen([ shutil.which('ffprobe') ] + commands, stdout = subprocess.PIPE)
+			output, _ = process.communicate()
+			if process.returncode == 0:
+				try:
+					numerator, denominator = map(int, output.decode().strip().split('/'))
+					return numerator / denominator
+				except Exception:
+					pass
 	return None
 
 
 def restrict_video_fps(video_path : str, fps : Fps) -> Fps:
-	if is_video(video_path) and fps:
-		video_fps = detect_video_fps(video_path)
-		if video_fps < fps:
-			return video_fps
+	if is_video(video_path):
+		if fps:
+			video_fps = detect_video_fps(video_path)
+			if video_fps < fps:
+				return video_fps
+		else:
+			return detect_video_fps(video_path)
 	return fps
 
 

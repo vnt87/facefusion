@@ -7,6 +7,7 @@ import { Terminal } from '@/components/custom/Terminal'
 import { ProgressBar } from '@/components/custom/ProgressBar'
 import { FaceSelector } from '@/components/custom/FaceSelector'
 import { FrameTrimmer } from '@/components/custom/FrameTrimmer'
+import { VideoResult } from '@/components/custom/VideoResult'
 import { Button } from '@/components/ui/button'
 import {
   uploadSource,
@@ -49,7 +50,7 @@ function Dashboard() {
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const { logs, progress, status, isConnected, isComplete, isError, currentFrame: progressFrame, totalFrames, speed, executionProviders, clearLogs } = useWebSocket()
+  const { logs, progress, status, isConnected, isComplete, isError, outputPath, currentFrame: progressFrame, totalFrames, speed, executionProviders, clearLogs } = useWebSocket()
 
   // Upload mutations
   const uploadSourceMutation = useMutation({
@@ -219,60 +220,17 @@ function Dashboard() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/25">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-white">Face Swap Studio</h2>
-              <p className="text-sm text-zinc-400">
-                Upload your source and target files to begin
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/25">
+            <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleReset}
-              className="gap-2 border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-white"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset
-            </Button>
-            <Button
-              size="lg"
-              onClick={handleProcess}
-              disabled={!canProcess}
-              className="gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/25 hover:from-red-600 hover:to-orange-600"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  Start Processing
-                </>
-              )}
-            </Button>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Face Swap Studio</h2>
+            <p className="text-sm text-zinc-400">
+              Upload your source and target files to begin
+            </p>
           </div>
         </div>
-
-        {/* Progress Bar */}
-        <ProgressBar
-          progress={progress}
-          status={status}
-          isConnected={isConnected}
-          isError={isError}
-          currentFrame={progressFrame}
-          totalFrames={totalFrames}
-          speed={speed}
-          executionProviders={executionProviders}
-        />
 
         {/* File Uploaders */}
         <div className="grid gap-4 md:grid-cols-2">
@@ -318,17 +276,71 @@ function Dashboard() {
           />
         )}
 
-        {/* Preview and Terminal */}
+        {/* Preview/Result and Terminal/Controls */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Preview
-            previewImage={previewImage}
-            isLoading={isLoadingPreview}
-            isVideo={targetFile?.is_video}
-            frameCount={videoInfo?.frame_count || 0}
-            currentFrame={currentFrame}
-            onFrameChange={handleFrameChange}
-          />
-          <Terminal logs={logs} />
+          {/* Left Column: Preview or Result */}
+          <div className="space-y-4">
+            {isComplete && outputPath ? (
+              <VideoResult outputPath={outputPath} isComplete={isComplete} />
+            ) : (
+              <Preview
+                previewImage={previewImage}
+                isLoading={isLoadingPreview}
+                isVideo={targetFile?.is_video}
+                frameCount={videoInfo?.frame_count || 0}
+                currentFrame={currentFrame}
+                onFrameChange={handleFrameChange}
+              />
+            )}
+          </div>
+
+          {/* Right Column: Terminal, Progress, and Controls */}
+          <div className="space-y-4">
+            <Terminal logs={logs} className="max-h-64" />
+
+            {/* Progress Bar */}
+            <ProgressBar
+              progress={progress}
+              status={status}
+              isConnected={isConnected}
+              isError={isError}
+              currentFrame={progressFrame}
+              totalFrames={totalFrames}
+              speed={speed}
+              executionProviders={executionProviders}
+            />
+
+            {/* CTA Buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleReset}
+                className="gap-2 border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </Button>
+              <Button
+                size="lg"
+                onClick={handleProcess}
+                disabled={!canProcess}
+                className="flex-1 gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/25 hover:from-red-600 hover:to-orange-600"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Start Processing
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </MainLayout>
